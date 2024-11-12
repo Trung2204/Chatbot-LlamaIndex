@@ -3,11 +3,6 @@ import openai
 from llama_index.llms.openai import OpenAI
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 
-# Load the custom CSS file
-with open("styles.css") as f:
-    st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-
-
 # Streamlit Configuration
 st.set_page_config(
     page_title="Chat with the Streamlit docs, powered by LlamaIndex",
