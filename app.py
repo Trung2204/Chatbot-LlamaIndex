@@ -3,8 +3,8 @@ import openai
 from llama_index.llms.openai import OpenAI
 from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 
-
-st.set_page_config(  # Streamlit Configuration
+# Streamlit Configuration
+st.set_page_config(
     page_title="Chat with the Streamlit docs, powered by LlamaIndex",
     page_icon="🦙",
     layout="centered",
@@ -19,12 +19,12 @@ openai.api_key = st.secrets.openai_key  # API Key Setup
 # Title and Info
 st.title("Chat with the Streamlit docs, powered by LlamaIndex 💬🦙")
 st.info(
-    "Check out the full tutorial to build this app in our [blog post](https://blog.streamlit.io/build-a-chatbot-with-custom-data-sources-powered-by-llamaindex/)",
+    "This application is only for learning purpose and based on [this tutorial](https://blog.streamlit.io/build-a-chatbot-with-custom-data-sources-powered-by-llamaindex/).",
     icon="📃",
 )
 
-
-if "messages" not in st.session_state.keys():  # Initialize the chat messages history
+# Initialize the chat messages history
+if "messages" not in st.session_state.keys():
     st.session_state.messages = [
         {
             "role": "assistant",
@@ -33,8 +33,9 @@ if "messages" not in st.session_state.keys():  # Initialize the chat messages hi
     ]
 
 
+# Load data and initialize LlamaIndex
 @st.cache_resource(show_spinner=False)
-def load_data():  # Load the data from folder data
+def load_data():
     reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
     docs = reader.load_data()
     Settings.llm = OpenAI(
@@ -54,7 +55,8 @@ def load_data():  # Load the data from folder data
 
 index = load_data()
 
-if "chat_engine" not in st.session_state.keys():  # Initialize the chat engine
+# Initialize the chat engine
+if "chat_engine" not in st.session_state.keys():
     st.session_state.chat_engine = index.as_chat_engine(
         chat_mode="condense_question", verbose=True, streaming=True
     )
