@@ -1,9 +1,7 @@
-import llama_parse as lp
 import streamlit as st
 import openai
-import hashlib
 from llama_index.llms.openai import OpenAI
-from llama_index.core import VectorStoreIndex, Settings
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 
 # Streamlit Configuration
 st.set_page_config(
@@ -33,32 +31,11 @@ if "messages" not in st.session_state.keys():
     ]
 
 
-# Define the Document Class
-class Document:
-    def __init__(self, content, doc_id):
-        self.content = content
-        self.doc_id = doc_id
-        self.hash = self.compute_hash()
-
-    def get_doc_id(self):
-        return self.doc_id
-
-    def get_content(self):
-        return self.content
-
-    def compute_hash(self):
-        return hashlib.md5(self.content.encode()).hexdigest()
-
-
-# Load data using LlamaParse
+# Load data and initialize LlamaIndex
 @st.cache_resource(show_spinner=False)
 def load_data():
-    # Parse the PDF file
-    parsed_docs = lp.load_data(input_file="./data/latex2e.pdf")
-    documents = [
-        Document(content=doc, doc_id=str(i)) for i, doc in enumerate(parsed_docs)
-    ]
-
+    reader = SimpleDirectoryReader(input_file="./data/latex2e.pdf")
+    docs = reader.load_data()
     Settings.llm = OpenAI(
         model="gpt-3.5-turbo",
         temperature=0.2,
@@ -68,7 +45,11 @@ def load_data():
         Keep your answers technical and based on facts
         - do not hallucinate features.""",
     )
-    index = VectorStoreIndex.from_documents(documents)
+    if docs:
+        index = VectorStoreIndex.from_documents(docs)
+    else:
+        st.error("No documents loaded.")
+        index = None
     return index
 
 
