@@ -5,8 +5,8 @@ from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 
 # Streamlit Configuration
 st.set_page_config(
-    page_title="Chat about LaTeX, powered by LlamaIndex",
-    page_icon="📄",
+    page_title="LaTeX Expert Chat, by LlamaIndex",
+    page_icon="./assets/icon.png",
     layout="centered",
     initial_sidebar_state="auto",
     menu_items=None,
