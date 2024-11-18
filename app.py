@@ -34,7 +34,7 @@ if "messages" not in st.session_state.keys():
 # Load data and initialize LlamaIndex
 @st.cache_resource(show_spinner=False)
 def load_data():
-    reader = SimpleDirectoryReader(input_file="./data/latex2e.pdf")
+    reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
     docs = reader.load_data()
     Settings.llm = OpenAI(
         model="gpt-3.5-turbo",
