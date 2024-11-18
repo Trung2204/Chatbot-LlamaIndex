@@ -1,8 +1,9 @@
+import llama_parse as lp
 import streamlit as st
 import openai
+import hashlib
 from llama_index.llms.openai import OpenAI
 from llama_index.core import VectorStoreIndex, Settings
-import fitz
 
 # Streamlit Configuration
 st.set_page_config(
@@ -32,10 +33,12 @@ if "messages" not in st.session_state.keys():
     ]
 
 
+# Define the Document Class
 class Document:
     def __init__(self, content, doc_id):
         self.content = content
         self.doc_id = doc_id
+        self.hash = self.compute_hash()
 
     def get_doc_id(self):
         return self.doc_id
@@ -43,31 +46,19 @@ class Document:
     def get_content(self):
         return self.content
 
-
-class SimplePDFReader:
-    """
-    Custom reader to handle the extraction from a PDF file
-    and convert it into a format can be indexed
-    """
-
-    def __init__(self, input_file):
-        self.input_file = input_file
-
-    def load_data(self):
-        documents = []
-        with fitz.open(self.input_file) as pdf_document:
-            text = ""
-            for page in pdf_document:
-                text += page.get_text()
-            documents.append(Document(content=text, doc_id=self.input_file))
-        return documents
+    def compute_hash(self):
+        return hashlib.md5(self.content.encode()).hexdigest()
 
 
-# Load data and initialize LlamaIndex
+# Load data using LlamaParse
 @st.cache_resource(show_spinner=False)
 def load_data():
-    reader = SimplePDFReader(input_file="./data/latex2e.pdf")
-    docs = reader.load_data()
+    # Parse the PDF file
+    parsed_docs = lp.load_data(input_file="./data/latex2e.pdf")
+    documents = [
+        Document(content=doc, doc_id=str(i)) for i, doc in enumerate(parsed_docs)
+    ]
+
     Settings.llm = OpenAI(
         model="gpt-3.5-turbo",
         temperature=0.2,
@@ -77,7 +68,7 @@ def load_data():
         Keep your answers technical and based on facts
         - do not hallucinate features.""",
     )
-    index = VectorStoreIndex.from_documents(docs)
+    index = VectorStoreIndex.from_documents(documents)
     return index
 
 
