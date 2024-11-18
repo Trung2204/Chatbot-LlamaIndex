@@ -32,6 +32,18 @@ if "messages" not in st.session_state.keys():
     ]
 
 
+class Document:
+    def __init__(self, content, doc_id):
+        self.content = content
+        self.doc_id = doc_id
+
+    def get_doc_id(self):
+        return self.doc_id
+
+    def get_content(self):
+        return self.content
+
+
 class SimplePDFReader:
     """
     Custom reader to handle the extraction from a PDF file
@@ -47,7 +59,7 @@ class SimplePDFReader:
             text = ""
             for page in pdf_document:
                 text += page.get_text()
-            documents.append({"file": self.input_file, "content": text})
+            documents.append(Document(content=text, doc_id=self.input_file))
         return documents
 
 
