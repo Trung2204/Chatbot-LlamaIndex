@@ -1,7 +1,12 @@
 import streamlit as st
 import openai
 from llama_index.llms.openai import OpenAI
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
+from llama_index.core import (
+    VectorStoreIndex,
+    SimpleDirectoryReader,
+    Settings,
+    ServiceContext,
+)
 
 # Streamlit Configuration
 st.set_page_config(
@@ -39,10 +44,11 @@ def load_data():
     ):
         reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
         docs = reader.load_data()
-        Settings.llm = OpenAI(
-            model="gpt-3.5-turbo",
-            temperature=0.5,
-            system_prompt="""
+        service_context = ServiceContext.from_defaults(
+            llm=OpenAI(
+                model="gpt-3.5-turbo",
+                temperature=0.5,
+                system_prompt="""
                 You are a knowledgeable LaTeX expert. Your job is to assist users with their LaTeX-related questions by providing accurate, concise, and informative answers. Ensure your responses are technically correct and based on factual information from LaTeX documentation and best practices.
 
                 Guidelines:
@@ -54,9 +60,9 @@ def load_data():
                 - If you don't know the answer, suggest checking official LaTeX documentation or community forums for more information.
 
                 """,
+            )
         )
-
-        index = VectorStoreIndex.from_documents(docs)
+        index = VectorStoreIndex.from_documents(docs, service_context=service_context)
         return index
 
 
