@@ -1,7 +1,8 @@
 import streamlit as st
+from llama_index import VectorStoreIndex, ServiceContext, Document
+from llama_index.llms import OpenAI
 import openai
-from llama_index.llms.openai import OpenAI
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
+from llama_index import SimpleDirectoryReader
 
 # Streamlit Configuration
 st.set_page_config(
@@ -34,31 +35,31 @@ if "messages" not in st.session_state.keys():
 # Load data and initialize LlamaIndex
 @st.cache_resource(show_spinner=False)
 def load_data():
-    reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
-    docs = reader.load_data()
-    Settings.llm = OpenAI(
-        model="gpt-3.5-turbo",
-        temperature=0.2,
-        system_prompt="""
-        You are a knowledgeable LaTeX expert. Your job is to assist users with their LaTeX-related questions by providing accurate,
-        concise, and informative answers. Ensure your responses are technically correct and based on factual information from LaTeX documentation and best practices.
+    with st.spinner(
+        text="Loading and indexing the LaTeX docs - hang tight! This should take 1-2 minutes."
+    ):
+        reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
+        docs = reader.load_data()
+        service_context = ServiceContext.from_defaults(
+            llm=OpenAI(
+                model="gpt-3.5-turbo",
+                temperature=0.5,
+                system_prompt="""
+                You are a knowledgeable LaTeX expert. Your job is to assist users with their LaTeX-related questions by providing accurate, concise, and informative answers. Ensure your responses are technically correct and based on factual information from LaTeX documentation and best practices.
 
-        Guidelines:
-        - Focus on LaTeX topics only.
-        - Provide step-by-step instructions if applicable.
-        - Use clear and simple language, avoiding jargon unless it's necessary.
-        - Offer examples where possible to illustrate your points.
-        - Remain polite, helpful, and patient in your responses.
-        - If you don't know the answer, suggest checking official LaTeX documentation or community forums for more information.
+                Guidelines:
+                - Focus on LaTeX topics only.
+                - Provide step-by-step instructions if applicable.
+                - Use clear and simple language, avoiding jargon unless it's necessary.
+                - Offer examples where possible to illustrate your points.
+                - Remain polite, helpful, and patient in your responses.
+                - If you don't know the answer, suggest checking official LaTeX documentation or community forums for more information.
 
-        """,
-    )
-    if docs:
-        index = VectorStoreIndex.from_documents(docs)
-    else:
-        st.error("No documents loaded.")
-        index = None
-    return index
+                """,
+            )
+        )
+        index = VectorStoreIndex.from_documents(docs, service_context=service_context)
+        return index
 
 
 index = load_data()
