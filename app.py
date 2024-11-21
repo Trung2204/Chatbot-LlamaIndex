@@ -1,75 +1,53 @@
 import streamlit as st
 import openai
 from llama_index.llms.openai import OpenAI
-from llama_index.core import (
-    VectorStoreIndex,
-    SimpleDirectoryReader,
-    Settings,
-    ServiceContext,
-)
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings
 
-# Streamlit Configuration
 st.set_page_config(
-    page_title="LaTeX Expert Chat, by LlamaIndex",
-    page_icon="./assets/icon.jpg",
+    page_title="Chat with the Streamlit docs, powered by LlamaIndex",
+    page_icon="🦙",
     layout="centered",
     initial_sidebar_state="auto",
     menu_items=None,
 )
-
-openai.api_key = st.secrets.openai_key  # API Key Setup
-
-# Title and Info
-st.title("Chat about LaTeX, powered by LlamaIndex 💬🦙")
+openai.api_key = st.secrets.openai_key
+st.title("Chat with the Streamlit docs, powered by LlamaIndex 💬🦙")
 st.info(
-    "This application is only for learning purpose and based on [LaTeX documentation](https://texdoc.org/serve/latex2e.pdf/0).",
+    "Check out the full tutorial to build this app in our [blog post](https://blog.streamlit.io/build-a-chatbot-with-custom-data-sources-powered-by-llamaindex/)",
     icon="📃",
 )
 
-# Initialize the chat messages history
-if "messages" not in st.session_state.keys():
+if "messages" not in st.session_state.keys():  # Initialize the chat messages history
     st.session_state.messages = [
         {
             "role": "assistant",
-            "content": "Ask me a question about LaTeX!",
+            "content": "Ask me a question about Streamlit's open-source Python library!",
         }
     ]
 
 
-# Load data and initialize LlamaIndex
 @st.cache_resource(show_spinner=False)
 def load_data():
-    with st.spinner(
-        text="Loading and indexing the LaTeX docs - hang tight! This should take 1-2 minutes."
-    ):
-        reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
-        docs = reader.load_data()
-        service_context = ServiceContext.from_defaults(
-            llm=OpenAI(
-                model="gpt-3.5-turbo",
-                temperature=0.5,
-                system_prompt="""
-                You are a knowledgeable LaTeX expert. Your job is to assist users with their LaTeX-related questions by providing accurate, concise, and informative answers. Ensure your responses are technically correct and based on factual information from LaTeX documentation and best practices.
-
-                Guidelines:
-                - Focus on LaTeX topics only.
-                - Provide step-by-step instructions if applicable.
-                - Use clear and simple language, avoiding jargon unless it's necessary.
-                - Offer examples where possible to illustrate your points.
-                - Remain polite, helpful, and patient in your responses.
-                - If you don't know the answer, suggest checking official LaTeX documentation or community forums for more information.
-
-                """,
-            )
-        )
-        index = VectorStoreIndex.from_documents(docs, service_context=service_context)
-        return index
+    reader = SimpleDirectoryReader(input_dir="./data", recursive=True)
+    docs = reader.load_data()
+    Settings.llm = OpenAI(
+        model="gpt-3.5-turbo",
+        temperature=0.2,
+        system_prompt="""You are an expert on 
+        the Streamlit Python library and your 
+        job is to answer technical questions. 
+        Assume that all questions are related 
+        to the Streamlit Python library. Keep 
+        your answers technical and based on 
+        facts – do not hallucinate features.""",
+    )
+    index = VectorStoreIndex.from_documents(docs)
+    return index
 
 
 index = load_data()
 
-# Initialize the chat engine
-if "chat_engine" not in st.session_state.keys():
+if "chat_engine" not in st.session_state.keys():  # Initialize the chat engine
     st.session_state.chat_engine = index.as_chat_engine(
         chat_mode="condense_question", verbose=True, streaming=True
     )
